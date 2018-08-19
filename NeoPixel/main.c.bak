@@ -1,0 +1,355 @@
+/**************************************************************************************
+ * NEO PIXEL CONTROLLER
+ * main.c
+ * Adapted from Matrix 16x32
+ * For PIC32MX340F512H on PIC-32MX Olimex board
+ *		
+ * 9-07-14: `A Neo Pixel test
+ * 9-08-14: Assembler test
+ * 9-12-14: Two loops are working now
+ * Nested function calls working fine, apparently.
+ * 9-13-14: Uses nops for delays. Works beautifully with one Neo Pixel ring.
+ **************************************************************************************/
+ 
+#include <plib.h>
+#include <xc.h>
+#include <p32xxxx.h>
+#include <stdlib.h> 
+#include <stdio.h>
+#include <string.h>
+#include <ctype.h>
+#include "Delay.h"
+#include "HardwareProfile EXP16.h"
+
+#define NUMBER_OF_PIXELS 60
+#define false FALSE
+#define true TRUE
+#define LEDoutPin PORTDbits.RD6
+#define TRIGoutPin PORTDbits.RD5
+#define TEST_OUT PORTBbits.RB0
+
+
+unsigned char updatePixel(unsigned char ringNumber, unsigned short pixelNumber);
+extern unsigned long asmArray[];
+
+#pragma config FPLLMUL = MUL_20, FPLLIDIV = DIV_2, FPLLODIV = DIV_1, FWDTEN = OFF
+#pragma config FSOSCEN = OFF, IESO = OFF, FPBDIV = DIV_1, FCKSM = CSDCMD
+#pragma config POSCMOD = HS, FNOSC = PRIPLL
+#pragma config  DEBUG = OFF, PWP = OFF, BWP = OFF, CP = OFF
+
+
+// #define MAXCOL 32
+
+#define MAXLINE 8
+
+#define RED_OUT 0
+#define GREEN_OUT 1
+#define BLUE_OUT 2
+
+typedef struct {
+    union {
+        unsigned char LED[3];
+        unsigned long color;
+    };
+} LEDtype;
+
+// `A
+typedef struct {    
+    unsigned char Green;
+    unsigned char Red;
+    unsigned char Blue;    
+} NeoLEDtype;
+
+
+typedef struct {
+    NeoLEDtype LED;
+} PixelType;
+
+#define NUM_NEO_PIXELS 15
+typedef struct{
+    PixelType pixel[NUM_NEO_PIXELS];
+} RingType;
+
+
+
+RingType Ring[1];
+
+#define NUMPOTS 3
+unsigned char arrADdata[NUMPOTS];
+
+typedef struct {
+    short row;
+    short column;
+} pointType;
+
+const pointType ONEdigit[] = {
+    {1, 2},
+    {3, 4},
+    {5, 6}
+};
+
+// extern void asmFunction(int bits);
+extern void writePixels(void);
+volatile unsigned int cVariable = 0;
+volatile unsigned int jak = 0;
+unsigned long arrPixels[NUMBER_OF_PIXELS];
+
+int main(void) {
+unsigned short i;
+
+	for (i=0;i<NUMBER_OF_PIXELS; i++) arrPixels[i]=0;
+	i=0;
+	do{
+		arrPixels[i++]=0x00000000;
+		arrPixels[i++]=0x00FF0000;
+		arrPixels[i++]=0x0000FF00;
+		arrPixels[i++]=0x000000FF;
+	} while(i<=14);
+
+    // Enable optimal performance
+    SYSTEMConfigPerformance(GetSystemClock());
+    mOSCSetPBDIV(OSC_PB_DIV_1); // Use 1:1 CPU Core:Peripheral clocks
+
+    // Turn off JTAG so we get the pins back
+    mJTAGPortEnable(false);
+
+/*
+    // Set up UART #2 for 57600 baud
+    UARTConfigure(UART2, UART_ENABLE_PINS_TX_RX_ONLY);
+    //	UARTConfigure(UART2, UART_ENABLE_HIGH_SPEED|UART_ENABLE_PINS_TX_RX_ONLY);
+    UARTSetFifoMode(UART2, UART_INTERRUPT_ON_TX_DONE | UART_INTERRUPT_ON_RX_NOT_EMPTY);
+    UARTSetLineControl(UART2, UART_DATA_SIZE_8_BITS | UART_PARITY_NONE | UART_STOP_BITS_1);
+    UARTSetDataRate(UART2, GetPeripheralClock(), 57600);
+    UARTEnable(UART2, UART_ENABLE_FLAGS(UART_PERIPHERAL | UART_RX | UART_TX));
+
+    DelayMs(100);
+
+    // PORTD = OE_DIS;
+    PORTSetPinsDigitalOut(IOPORT_D, BIT_0 | BIT_1 | BIT_2 | BIT_3 | BIT_4 | BIT_5 | BIT_6 | BIT_7 | BIT_8 | BIT_9 | BIT_10 | BIT_11);
+*/
+    
+    PORTSetPinsDigitalOut(IOPORT_B, BIT_0);
+    // TEST_OUT = 0;
+
+    // LEDoutPin=0;
+    // TRIGoutPin=0;   
+    
+
+    // #define TIMEOUT 50000
+    // #define TIMEOUT 1600
+    // Configure Timer 1 using internal clock, 1:1 prescale, Postscale = 1600 for interrupts every 20 uS
+    // This yields a refresh rate of 200 hz for entire display
+    // 20 us x 8 lines x 32
+    //OpenTimer1(T1_ON | T1_SOURCE_INT | T1_PS_1_1, TIMEOUT); // was T1_PS_1_1
+
+    // Set up the timer interrupt with a priority of 2
+    //ConfigIntTimer1(T1_INT_ON | T1_INT_PRIOR_2);
+
+    // Set up AD converters
+    // ConfigAd();
+
+    // Enable multi-vectored interrupts
+    // INTEnableSystemMultiVectoredInt();
+
+/*
+	DelayMs(200);
+	printf("\r\rTesting PORTB");
+	TEST_OUT = 1;
+
+	arrPixels[0]=0;
+*/
+	while(1){		
+		writePixels();
+		DelayMs(100);
+	}
+
+/*
+		for(i=0;i<10;i++){
+			writePixels();
+			PORTBbits.RB0=1;	
+			writePixels();		
+			PORTBbits.RB0=0;			
+		}	
+		DelayMs(100);						
+	}		
+*/
+
+
+}
+    
+
+
+
+// UART 2 interrupt handler
+// it is set at priority level 2
+
+void __ISR(_UART2_VECTOR, ipl2) IntUart2Handler(void) {
+
+    if (INTGetFlag(INT_SOURCE_UART_RX(UART2)))
+        INTClearFlag(INT_SOURCE_UART_RX(UART2));
+
+    if (INTGetFlag(INT_SOURCE_UART_TX(UART2)))
+        INTClearFlag(INT_SOURCE_UART_TX(UART2));
+}
+
+void ConfigAd(void) {
+
+    mPORTBSetPinsAnalogIn(BIT_0);
+    mPORTBSetPinsAnalogIn(BIT_1);
+    mPORTBSetPinsAnalogIn(BIT_2);
+
+    // ---- configure and enable the ADC ----
+
+    // ensure the ADC is off before setting the configuration
+    CloseADC10();
+
+    // define setup parameters for OpenADC10
+    //                 Turn module on | ouput in integer | trigger mode auto | enable autosample
+#define PARAM1  ADC_MODULE_ON | ADC_FORMAT_INTG | ADC_CLK_AUTO | ADC_AUTO_SAMPLING_ON
+
+    // ADC ref external    | disable offset test    | enable scan mode | perform  samples | use dual buffers | use only mux A
+#define PARAM2  ADC_VREF_AVDD_AVSS | ADC_OFFSET_CAL_DISABLE | ADC_SCAN_ON | ADC_SAMPLES_PER_INT_3 | ADC_ALT_BUF_ON | ADC_ALT_INPUT_OFF
+
+    //                   use ADC internal clock | set sample time
+#define PARAM3  ADC_CONV_CLK_INTERNAL_RC | ADC_SAMPLE_TIME_31
+
+    //  set inputs to analog
+#define PARAM4    ENABLE_AN0_ANA | ENABLE_AN1_ANA| ENABLE_AN2_ANA // | ENABLE_AN3_ANA
+
+    // only scan AN0 to AN2
+#define PARAM5   SKIP_SCAN_AN3 |SKIP_SCAN_AN5 |SKIP_SCAN_AN6 |SKIP_SCAN_AN7 | \
+                      SKIP_SCAN_AN8 |SKIP_SCAN_AN9 |SKIP_SCAN_AN10 |SKIP_SCAN_AN11 | \
+                      SKIP_SCAN_AN12 |SKIP_SCAN_AN13 |SKIP_SCAN_AN14 |SKIP_SCAN_AN15
+
+    // set negative reference to Vref for Mux A
+    SetChanADC10(ADC_CH0_NEG_SAMPLEA_NVREF);
+
+    // open the ADC
+    OpenADC10(PARAM1, PARAM2, PARAM3, PARAM4, PARAM5);
+
+    // -- configure the ADC interrupt, priority level 2 --
+    ConfigIntADC10(ADC_INT_PRI_2 | ADC_INT_SUB_PRI_2 | ADC_INT_ON);
+
+    // clear the interrupt flag
+    mAD1ClearIntFlag();
+
+    // Enable the ADC
+    EnableADC10();
+
+}
+
+void __ISR(_ADC_VECTOR, ipl6) AdcHandler(void) {
+    unsigned short offSet;
+    unsigned char i;
+
+    // Clear the interrupt flag
+    mAD1ClearIntFlag();
+
+    // Determine which buffer is idle and create an offset
+    offSet = 8 * ((~ReadActiveBufferADC10() & 0x01));
+
+    for (i = 0; i < NUMPOTS; i++)
+        arrADdata[i] = (unsigned char) (ReadADC10(offSet + i) / 4); // read the result of channel 0 conversion from the idle buffer
+}
+
+
+
+void __ISR(_TIMER_1_VECTOR, ipl2) Timer1Handler(void){
+static unsigned char ringNumber=0;
+static unsigned short pixelNumber=0;
+unsigned char i;
+
+    TRIGoutPin=1;    
+    for(i=0; i<NUM_NEO_PIXELS; i++) updatePixel(0, i);
+    TRIGoutPin=0;
+
+    /*
+    pixelNumber++;
+    if (pixelNumber>=NUM_NEO_PIXELS){
+        LEDoutPin=0;
+        pixelNumber=0;
+        OpenTimer1(T1_ON | T1_SOURCE_INT | T1_PS_1_1, TIMEOUT); // was T1_PS_1_1
+        TRIGoutPin=1;
+    }
+    else OpenTimer1(T1_ON | T1_SOURCE_INT | T1_PS_1_1, 1600); // was T1_PS_1_1
+    */
+    mT1ClearIntFlag(); // Clear interrupt flag
+    
+}
+
+
+unsigned char updatePixel(unsigned char ringNumber, unsigned short pixelNumber){
+unsigned short i;
+unsigned char dutyCycle, mask, dummy;
+  
+    // Start with Green LED, MSB first:
+    mask=0x80;
+    for (i=0; i<8; i++){
+        LEDoutPin=1;
+        if (mask & Ring[ringNumber].pixel[pixelNumber].LED.Green){  // If bit is a 1:
+            for(dutyCycle=0;dutyCycle<4;dutyCycle++);
+            LEDoutPin=0;            
+            //  for(dutyCycle=0;dutyCycle<1;dutyCycle++);
+            dummy--;
+        }
+        else{
+            // for(dutyCycle=0;dutyCycle<1;dutyCycle++);
+            dummy--;
+            LEDoutPin=0;
+            for(dutyCycle=0;dutyCycle<4;dutyCycle++);
+        }
+        mask=mask>>1;        
+    }
+
+    
+    // Start with Red LED, MSB first:
+    mask=0x80;
+    for (i=0; i<8; i++){
+        LEDoutPin=1;
+        if (mask & Ring[ringNumber].pixel[pixelNumber].LED.Red){  // If bit is a 1:
+            for(dutyCycle=0;dutyCycle<4;dutyCycle++);
+            LEDoutPin=0;
+            // for(dutyCycle=0;dutyCycle<1;dutyCycle++);
+            dummy--;
+        }
+        else{
+            // for(dutyCycle=0;dutyCycle<1;dutyCycle++);
+            dummy--;
+            LEDoutPin=0;
+            for(dutyCycle=0;dutyCycle<4;dutyCycle++);
+        }
+        mask=mask>>1;
+    }
+
+    // Start with Blue LED, MSB first:
+    mask=0x80;
+    for (i=0; i<8; i++){
+        LEDoutPin=1;
+        if (mask & Ring[ringNumber].pixel[pixelNumber].LED.Blue){  // If bit is a 1:
+            for(dutyCycle=0;dutyCycle<4;dutyCycle++);
+            LEDoutPin=0;
+            // for(dutyCycle=0;dutyCycle<1;dutyCycle++);
+            dummy--;
+        }
+        else{
+            // for(dutyCycle=0;dutyCycle<1;dutyCycle++);
+            dummy--;
+            LEDoutPin=0;
+            for(dutyCycle=0;dutyCycle<4;dutyCycle++);
+        }
+        mask=mask>>1;
+    }
+
+
+}
+
+//  Ring[ringNumber].pixel[pixelNumber].LED.Blue
+//  Ring[ringNumber].pixel[pixelNumber].LED.Red
+
+//  Ring[ringNumber].pixel[pixelNumber].LED.Green
+
+void foo (void)
+{
+	DelayMs(1);
+} 
+ 

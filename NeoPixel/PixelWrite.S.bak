@@ -1,0 +1,126 @@
+/* PixelWrite.S */
+#include <xc.h>
+
+.data
+.global asmVariable
+.align 2
+asmVariable: .space 240
+
+.text
+.set noreorder
+/*********************************************************************
+* writePixels()
+* 
+********************************************************************/
+.global writePixels
+.ent writePixels
+writePixels:
+addiu sp, sp, -4  	# Push stack pointer
+
+la s0, LATB			# Load address of PORTB latch
+lw s1, 0(s0)		# Copy PORTB data into s1
+ori s1, s1, 0x0001	# Set bit 0 high
+sw s1, 0(s0)		# Write to PORTB
+
+nop	#10
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+
+nop	#20
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+
+nop #30
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+
+nop #40
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+
+nop #50
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+
+nop #60
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+
+nop #70
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+
+
+
+
+andi s1, s1, 0xFFFE	# Set bit 0 low
+sw s1, 0(s0)		# Write to PORTB
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+
+
+addiu sp, sp, 4	 /* Pop stack pointer */
+.end writePixels
+.bss
+
+
+
+
+

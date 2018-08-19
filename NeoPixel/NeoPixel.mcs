@@ -1,0 +1,72 @@
+[Header]
+MagicCookie={0b13fe8c-dfe0-40eb-8900-6712719559a7}
+Version=1.0
+[File000]
+Location=C:\Users\Jim\Documents\Work\NeoPixel\main.o
+Folder=Intermediary
+DeviceName=PIC32MX340F512H
+LanguageToolSuiteID={62D235D8-2DB2-49CD-AF24-5489A6015337}
+LanguageToolID={DBB2B82D-3E10-4401-85A6-C9CB169D3E05}
+LanguageToolLocation=C:\Program Files (x86)\Microchip\xc32\v1.33\bin\xc32-gcc.exe
+PPAD=$(BINDIR)||$(TMPDIR)||$(AINDIR)||$(INCDIR)||$(LIBDIR)|C:\Program Files (x86)\Microchip\xc32\v1.33\pic32mx\lib||$(LKRDIR)||
+SOLK=<src>|main.c|DELAY32.c|PixelWrite.S||<obj>||<lib>||<lkr>||
+SuiteArgsString=
+ToolArgsString=-g
+TraceCmdString=
+DebugOptions=
+[File001]
+Location=C:\Users\Jim\Documents\Work\NeoPixel\DELAY32.o
+Folder=Intermediary
+DeviceName=PIC32MX340F512H
+LanguageToolSuiteID={62D235D8-2DB2-49CD-AF24-5489A6015337}
+LanguageToolID={DBB2B82D-3E10-4401-85A6-C9CB169D3E05}
+LanguageToolLocation=C:\Program Files (x86)\Microchip\xc32\v1.33\bin\xc32-gcc.exe
+PPAD=$(BINDIR)||$(TMPDIR)||$(AINDIR)||$(INCDIR)||$(LIBDIR)|C:\Program Files (x86)\Microchip\xc32\v1.33\pic32mx\lib||$(LKRDIR)||
+SOLK=<src>|main.c|DELAY32.c|PixelWrite.S||<obj>||<lib>||<lkr>||
+SuiteArgsString=
+ToolArgsString=-g
+TraceCmdString=
+DebugOptions=
+[File002]
+Location=C:\Users\Jim\Documents\Work\NeoPixel\PixelWrite.o
+Folder=Intermediary
+DeviceName=PIC32MX340F512H
+LanguageToolSuiteID={62D235D8-2DB2-49CD-AF24-5489A6015337}
+LanguageToolID={E9F2995B-2477-4B57-BEC5-E9F3A4D67DB7}
+LanguageToolLocation=C:\Program Files (x86)\Microchip\xc32\v1.33\bin\xc32-as.exe
+PPAD=$(BINDIR)||$(TMPDIR)||$(AINDIR)||$(INCDIR)||$(LIBDIR)|C:\Program Files (x86)\Microchip\xc32\v1.33\pic32mx\lib||$(LKRDIR)||
+SOLK=<src>|main.c|DELAY32.c|PixelWrite.S||<obj>||<lib>||<lkr>||
+SuiteArgsString=
+ToolArgsString=-gdwarf-2
+TraceCmdString=
+DebugOptions=
+[File003]
+Location=C:\Users\Jim\Documents\Work\NeoPixel\NeoPixel.elf
+Folder=Output
+DeviceName=PIC32MX340F512H
+LanguageToolSuiteID={62D235D8-2DB2-49CD-AF24-5489A6015337}
+LanguageToolID={A90E7C70-81C8-4500-B1F8-8560038BEFC0}
+LanguageToolLocation=C:\Program Files (x86)\Microchip\xc32\v1.33\bin\xc32-ld.exe
+PPAD=$(BINDIR)||$(TMPDIR)||$(AINDIR)||$(INCDIR)||$(LIBDIR)|C:\Program Files (x86)\Microchip\xc32\v1.33\pic32mx\lib||$(LKRDIR)||
+SOLK=<src>|main.c|DELAY32.c|PixelWrite.S||<obj>||<lib>||<lkr>||
+SuiteArgsString=
+ToolArgsString=-o"$(BINDIR_)$(TARGETBASE).$(TARGETSUFFIX)" -Map="$(BINDIR_)$(TARGETBASE).map"
+TraceCmdString=
+DebugOptions=
+[File004]
+Location=C:\Users\Jim\Documents\Work\NeoPixel\NeoPixel.hex
+Folder=Output
+DeviceName=PIC32MX340F512H
+LanguageToolSuiteID={62D235D8-2DB2-49CD-AF24-5489A6015337}
+LanguageToolID={A90E7C70-81C8-4500-B1F8-8560038BEFC0}
+LanguageToolLocation=C:\Program Files (x86)\Microchip\xc32\v1.33\bin\xc32-ld.exe
+PPAD=$(BINDIR)||$(TMPDIR)||$(AINDIR)||$(INCDIR)||$(LIBDIR)|C:\Program Files (x86)\Microchip\xc32\v1.33\pic32mx\lib||$(LKRDIR)||
+SOLK=<src>|main.c|DELAY32.c|PixelWrite.S||<obj>||<lib>||<lkr>||
+SuiteArgsString=
+ToolArgsString=-o"$(BINDIR_)$(TARGETBASE).$(TARGETSUFFIX)" -Map="$(BINDIR_)$(TARGETBASE).map"
+TraceCmdString=
+DebugOptions=
+[TOOL_LOC_STAMPS]
+tool_loc{E9F2995B-2477-4B57-BEC5-E9F3A4D67DB7}=C:\Program Files (x86)\Microchip\xc32\v1.33\bin\xc32-as.exe
+tool_loc{DBB2B82D-3E10-4401-85A6-C9CB169D3E05}=C:\Program Files (x86)\Microchip\xc32\v1.33\bin\xc32-gcc.exe
+tool_loc{A90E7C70-81C8-4500-B1F8-8560038BEFC0}=C:\Program Files (x86)\Microchip\xc32\v1.33\bin\xc32-ld.exe
